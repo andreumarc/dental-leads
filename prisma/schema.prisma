@@ -1,0 +1,618 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ENUMS
+// Roles canónicos ImpulsoDent Hub — valores invariantes en toda la suite
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  DIRECCION
+  RRHH
+  GESTOR
+  EMPLEADO
+  DEMO
+}
+
+enum LeadStatus {
+  NUEVO
+  SIN_ASIGNAR
+  ASIGNADO
+  PENDIENTE_RESPUESTA
+  RESPONDIDO
+  PENDIENTE_LLAMADA
+  EN_SEGUIMIENTO
+  CITA_SOLICITADA
+  CITA_PROPUESTA
+  CITA_CONFIRMADA
+  NO_LOCALIZADO
+  NO_INTERESADO
+  DUPLICADO
+  SPAM
+  CONVERTIDO
+  PERDIDO
+}
+
+enum LeadPriority {
+  BAJA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+enum ChannelType {
+  WHATSAPP
+  FORM_WEB
+  LANDING
+  MANUAL
+  CALLCENTER
+  CSV_IMPORT
+  WEBHOOK
+  GENERIC
+}
+
+enum ChannelStatus {
+  ACTIVO
+  INACTIVO
+  PENDIENTE_CONFIG
+  ERROR
+}
+
+enum AppointmentStatus {
+  SOLICITADA
+  PROPUESTA
+  CONFIRMADA
+  AGENDADA_EXTERNO
+  CANCELADA
+  REALIZADA
+  NO_PRESENTADO
+}
+
+enum AutomationTrigger {
+  LEAD_CREATED
+  LEAD_STATUS_CHANGED
+  LEAD_ASSIGNED
+  NO_RESPONSE_TIMEOUT
+  APPOINTMENT_CREATED
+  FORM_SUBMITTED
+}
+
+enum AutomationAction {
+  ASSIGN_LEAD
+  ADD_TAG
+  CHANGE_STATUS
+  SEND_NOTIFICATION
+  CREATE_TASK
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  IMPORT
+  STATUS_CHANGE
+  ASSIGNMENT_CHANGE
+}
+
+// COMPANY / TENANT
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  domain    String?
+  plan      String   @default("starter")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clinics         Clinic[]
+  users           User[]
+  leads           Lead[]
+  campaigns       Campaign[]
+  formDefinitions FormDefinition[]
+  channels        Channel[]
+  automationRules AutomationRule[]
+  auditLogs       AuditLog[]
+  companySettings CompanySettings?
+}
+
+// CLINIC
+model Clinic {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  slug      String
+  address   String?
+  city      String?
+  province  String?
+  phone     String?
+  email     String?
+  website   String?
+  logo      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company         Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userAccess      UserClinicAccess[]
+  leads           Lead[]
+  appointments    Appointment[]
+  channels        Channel[]
+  formDefinitions FormDefinition[]
+  clinicSettings  ClinicSettings?
+
+  @@unique([companyId, slug])
+}
+
+// USER
+model User {
+  id            String    @id @default(cuid())
+  companyId     String?
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  firstName     String?
+  lastName      String?
+  phone         String?
+  avatar        String?
+  role          UserRole  @default(EMPLEADO)
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  company           Company?                @relation(fields: [companyId], references: [id])
+  accounts          Account[]
+  sessions          Session[]
+  clinicAccess      UserClinicAccess[]
+  assignedLeads     Lead[]                  @relation("AssignedLeads")
+  createdLeads      Lead[]                  @relation("CreatedLeads")
+  leadNotes         LeadNote[]
+  leadEvents        LeadEvent[]
+  appointments      Appointment[]
+  auditLogs         AuditLog[]
+  assignmentHistory LeadAssignmentHistory[]
+}
+
+// AUTH.JS MODELS
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// USER CLINIC ACCESS
+model UserClinicAccess {
+  id        String   @id @default(cuid())
+  userId    String
+  clinicId  String
+  role      UserRole
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clinicId])
+}
+
+// LEAD
+model Lead {
+  id           String       @id @default(cuid())
+  companyId    String
+  clinicId     String?
+  assignedToId String?
+  createdById  String?
+  channelId    String?
+
+  // Personal
+  firstName String
+  lastName  String?
+  phone     String?
+  email     String?
+  company   String?
+
+  // Lead info
+  treatment      String?
+  status         LeadStatus   @default(NUEVO)
+  subStatus      String?
+  priority       LeadPriority @default(MEDIA)
+  origin         String?
+  channel        String?
+  subChannel     String?
+  initialMessage String?      @db.Text
+
+  // RGPD
+  gdprConsent     Boolean   @default(false)
+  gdprConsentDate DateTime?
+
+  // Dates
+  firstResponseAt   DateTime?
+  lastInteractionAt DateTime?
+
+  // Loss / conversion
+  lossReason  String?
+  isDuplicate Boolean @default(false)
+  isConverted Boolean @default(false)
+
+  // UTMs
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  utmTerm     String?
+
+  // Campaign
+  campaignId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companyRef        Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  clinic            Clinic?                 @relation(fields: [clinicId], references: [id])
+  assignedTo        User?                   @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  createdBy         User?                   @relation("CreatedLeads", fields: [createdById], references: [id])
+  channelRef        Channel?                @relation(fields: [channelId], references: [id])
+  campaign          Campaign?               @relation(fields: [campaignId], references: [id])
+  tags              LeadTag[]
+  events            LeadEvent[]
+  notes             LeadNote[]
+  appointments      Appointment[]
+  assignmentHistory LeadAssignmentHistory[]
+  attachments       Attachment[]
+  formSubmissions   FormSubmission[]
+  conversations     Conversation[]
+  auditLogs         AuditLog[]
+}
+
+// LEAD TAG
+model LeadTag {
+  id        String   @id @default(cuid())
+  leadId    String
+  name      String
+  color     String   @default("#3b82f6")
+  createdAt DateTime @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+// LEAD EVENT
+model LeadEvent {
+  id          String   @id @default(cuid())
+  leadId      String
+  userId      String?
+  type        String
+  description String   @db.Text
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  lead Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+}
+
+// LEAD NOTE
+model LeadNote {
+  id        String   @id @default(cuid())
+  leadId    String
+  userId    String
+  content   String   @db.Text
+  isPrivate Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+}
+
+// LEAD ASSIGNMENT HISTORY
+model LeadAssignmentHistory {
+  id           String   @id @default(cuid())
+  leadId       String
+  assignedToId String?
+  assignedById String?
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  lead       Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  assignedTo User? @relation(fields: [assignedToId], references: [id])
+}
+
+// APPOINTMENT
+model Appointment {
+  id          String            @id @default(cuid())
+  leadId      String
+  clinicId    String?
+  userId      String?
+  treatment   String?
+  specialty   String?
+  status      AppointmentStatus @default(SOLICITADA)
+  proposedAt  DateTime?
+  confirmedAt DateTime?
+  scheduledAt DateTime?
+  duration    Int? // minutos
+  notes       String?           @db.Text
+  externalRef String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  lead   Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  clinic Clinic? @relation(fields: [clinicId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id])
+}
+
+// FORM DEFINITION
+model FormDefinition {
+  id          String   @id @default(cuid())
+  companyId   String
+  clinicId    String?
+  name        String
+  slug        String
+  description String?
+  isActive    Boolean  @default(true)
+  isPublic    Boolean  @default(true)
+  embedCode   String?  @db.Text
+  webhookUrl  String?
+  redirectUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  clinic      Clinic?         @relation(fields: [clinicId], references: [id])
+  fields      FormField[]
+  submissions FormSubmission[]
+
+  @@unique([companyId, slug])
+}
+
+// FORM FIELD
+model FormField {
+  id          String   @id @default(cuid())
+  formId      String
+  name        String
+  label       String
+  type        String // text, email, phone, select, textarea, checkbox
+  placeholder String?
+  required    Boolean  @default(false)
+  options     Json? // para campos select
+  order       Int      @default(0)
+  mapToLead   String? // campo del lead al que mapea
+  createdAt   DateTime @default(now())
+
+  form FormDefinition @relation(fields: [formId], references: [id], onDelete: Cascade)
+}
+
+// FORM SUBMISSION
+model FormSubmission {
+  id        String   @id @default(cuid())
+  formId    String
+  leadId    String?
+  data      Json
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  form FormDefinition @relation(fields: [formId], references: [id])
+  lead Lead?          @relation(fields: [leadId], references: [id])
+}
+
+// CHANNEL
+model Channel {
+  id        String        @id @default(cuid())
+  companyId String
+  clinicId  String?
+  name      String
+  type      ChannelType
+  status    ChannelStatus @default(PENDIENTE_CONFIG)
+  config    Json?
+  isActive  Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  company            Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  clinic             Clinic?             @relation(fields: [clinicId], references: [id])
+  leads              Lead[]
+  integrationAccount IntegrationAccount?
+  conversations      Conversation[]
+  channelLogs        ChannelLog[]
+}
+
+// INTEGRATION ACCOUNT
+model IntegrationAccount {
+  id           String    @id @default(cuid())
+  channelId    String    @unique
+  provider     String
+  accountId    String?
+  accessToken  String?   @db.Text
+  refreshToken String?   @db.Text
+  expiresAt    DateTime?
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+// CHANNEL LOG
+model ChannelLog {
+  id        String   @id @default(cuid())
+  channelId String
+  level     String   @default("info")
+  message   String   @db.Text
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+// CONVERSATION
+model Conversation {
+  id         String   @id @default(cuid())
+  leadId     String
+  channelId  String?
+  externalId String?
+  isOpen     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  lead     Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  channel  Channel?  @relation(fields: [channelId], references: [id])
+  messages Message[]
+}
+
+// MESSAGE
+model Message {
+  id             String    @id @default(cuid())
+  conversationId String
+  direction      String // inbound | outbound
+  content        String    @db.Text
+  contentType    String    @default("text")
+  externalId     String?
+  sentAt         DateTime?
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+// CAMPAIGN
+model Campaign {
+  id          String    @id @default(cuid())
+  companyId   String
+  name        String
+  description String?
+  source      String?
+  medium      String?
+  utmCampaign String?
+  isActive    Boolean   @default(true)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leads   Lead[]
+}
+
+// AUTOMATION RULE
+// trigger + actions are Json to support the flexible multi-action rule engine
+// (see src/lib/automations/engine.ts). Enums AutomationTrigger / AutomationAction
+// remain as documentation of the supported values but are not used as column types.
+model AutomationRule {
+  id          String    @id @default(cuid())
+  companyId   String
+  name        String
+  description String?
+  trigger     Json
+  conditions  Json?
+  actions     Json
+  isActive    Boolean   @default(true)
+  priority    Int       @default(0)
+  lastRunAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+// AUDIT LOG
+model AuditLog {
+  id        String      @id @default(cuid())
+  companyId String
+  userId    String?
+  leadId    String?
+  action    AuditAction
+  entity    String
+  entityId  String
+  changes   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime    @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id])
+  lead    Lead?   @relation(fields: [leadId], references: [id])
+}
+
+// ATTACHMENT
+model Attachment {
+  id         String   @id @default(cuid())
+  leadId     String?
+  name       String
+  url        String
+  mimeType   String?
+  size       Int?
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+
+  lead Lead? @relation(fields: [leadId], references: [id])
+}
+
+// SETTINGS
+model CompanySettings {
+  id                    String   @id @default(cuid())
+  companyId             String   @unique
+  timezone              String   @default("Europe/Madrid")
+  language              String   @default("es")
+  defaultLeadAssignment String?
+  responseTimeAlert     Int      @default(60) // minutos
+  duplicateDetection    Boolean  @default(true)
+  gdprRequired          Boolean  @default(true)
+  notifications         Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model ClinicSettings {
+  id               String   @id @default(cuid())
+  clinicId         String   @unique
+  autoAssignUserId String?
+  workingHours     Json?
+  treatments       Json?
+  specialties      Json?
+  calendarUrl      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+}
