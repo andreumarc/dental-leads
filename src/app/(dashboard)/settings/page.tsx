@@ -12,7 +12,7 @@ export default async function SettingsPage() {
   if (!hasPermission(session.user.role, "settings", "view")) {
     redirect("/dashboard");
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) redirect("/dashboard");
 
   const [company, settings] = await Promise.all([

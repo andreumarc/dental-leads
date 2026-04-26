@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
+import { toJson } from "@/lib/utils";
 
 const createSchema = z.object({
   name: z.string().min(2).max(120),
@@ -31,7 +32,7 @@ export async function GET() {
   if (!hasPermission(session.user.role, "clinics", "view")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
   if (!hasPermission(session.user.role, "clinics", "create")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -122,12 +123,7 @@ export async function POST(req: NextRequest) {
         action: "CREATE",
         entity: "Clinic",
         entityId: created.id,
-        changes: {
-          name: data.name,
-          slug: data.slug,
-          city: data.city,
-          isActive: data.isActive,
-        },
+        changes: toJson({ name: data.name, slug: data.slug, city: data.city, isActive: data.isActive }),
       },
     });
 

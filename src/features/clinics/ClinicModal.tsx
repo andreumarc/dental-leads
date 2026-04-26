@@ -71,7 +71,6 @@ export function ClinicModal({ open, onClose, onSaved, clinic }: ClinicModalProps
     setSubmitError(null);
     setSlugEdited(false);
     if (clinic) {
-      const cfg = (clinic.config as Record<string, unknown> | null) ?? {};
       reset({
         name: clinic.name,
         slug: clinic.slug,
@@ -82,14 +81,8 @@ export function ClinicModal({ open, onClose, onSaved, clinic }: ClinicModalProps
         email: clinic.email ?? "",
         website: clinic.website ?? "",
         isActive: clinic.isActive,
-        workingHoursEnabled:
-          typeof cfg.workingHoursEnabled === "boolean"
-            ? cfg.workingHoursEnabled
-            : true,
-        defaultReception:
-          typeof cfg.defaultReception === "boolean"
-            ? cfg.defaultReception
-            : false,
+        workingHoursEnabled: true,
+        defaultReception: false,
       });
       setSlugEdited(true);
     } else {

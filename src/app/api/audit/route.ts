@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
 
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   const isSuperadmin = session.user.role === "SUPERADMIN";
   if (!companyId && !isSuperadmin) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });

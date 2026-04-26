@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       let lead = await prisma.lead.findFirst({
         where: {
           phone: { in: [phone, message.from, message.from.replace(/^\+/, "")] },
-          companyId: channel?.clinic?.companyId ?? undefined,
+          companyId: channel?.companyId ?? undefined,
         },
         include: { conversations: { where: { channelId: channel?.id ?? undefined }, take: 1 } },
       });
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
                 phone,
                 status: "NUEVO",
                 priority: "MEDIA",
-                source: "whatsapp",
+                channel: "whatsapp",
                 initialMessage: message.body,
               },
               include: { conversations: { take: 1 } },

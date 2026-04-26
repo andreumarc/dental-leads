@@ -249,7 +249,7 @@ export function LeadFilters({
               {users.map((u) => (
                 <MultiCheckItem
                   key={u.id}
-                  label={u.name ?? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email}
+                  label={(u.name ?? `${(u.firstName ?? "")} ${(u.lastName ?? "")}`.trim()) || u.email}
                   checked={assignedIds.includes(u.id)}
                   onToggle={() => toggle(assignedIds, setAssignedIds, u.id)}
                 />

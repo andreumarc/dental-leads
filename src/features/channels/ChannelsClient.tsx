@@ -39,8 +39,8 @@ interface Channel {
     id: string;
     provider: string;
     accountId: string | null;
-    status: string;
-    lastSyncAt: Date | null;
+    metadata?: Record<string, unknown> | null;
+    updatedAt: Date | string;
   } | null;
   _count: { leads: number; conversations: number };
 }

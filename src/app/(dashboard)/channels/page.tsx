@@ -7,7 +7,7 @@ export default async function ChannelsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) redirect("/login");
 
   const channels = await prisma.channel.findMany({
@@ -15,7 +15,7 @@ export default async function ChannelsPage() {
     include: {
       clinic: { select: { id: true, name: true, slug: true } },
       integrationAccount: {
-        select: { id: true, provider: true, accountId: true, status: true, lastSyncAt: true },
+        select: { id: true, provider: true, accountId: true, metadata: true, updatedAt: true },
       },
       _count: { select: { leads: true, conversations: true } },
     },
@@ -28,5 +28,6 @@ export default async function ChannelsPage() {
     orderBy: { name: "asc" },
   });
 
-  return <ChannelsClient channels={channels} clinics={clinics} />;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <ChannelsClient channels={channels as any} clinics={clinics} />;
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { toJson } from "@/lib/utils";
 
 const assignSchema = z.object({
   assignedToId: z.string().nullable(),
@@ -18,7 +19,7 @@ export async function POST(
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const companyId = session.user.companyId;
+    const companyId = session.user.companyId ?? undefined;
     if (!companyId) {
       return NextResponse.json({ success: false, error: "Sin empresa asignada" }, { status: 403 });
     }
@@ -97,7 +98,7 @@ export async function POST(
           action: "ASSIGNMENT_CHANGE",
           entity: "Lead",
           entityId: id,
-          changes: { from: existing.assignedToId, to: assignedToId, reason },
+          changes: toJson({ from: existing.assignedToId, to: assignedToId, reason }),
         },
       });
 

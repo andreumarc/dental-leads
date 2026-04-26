@@ -28,9 +28,9 @@ import { getInitials } from "@/lib/utils";
 interface AppSidebarProps {
   user: {
     id: string;
-    name: string;
+    name: string | null;
     email: string;
-    image: string | null;
+    image?: string | null;
     role: UserRole;
     companyId: string | null;
   };
@@ -196,7 +196,7 @@ export function AppSidebar({ user, newLeadsCount = 0 }: AppSidebarProps) {
         <div className="w-8 h-8 rounded-full bg-[#0D9488] flex items-center justify-center flex-shrink-0 text-white text-xs font-bold overflow-hidden">
           {user.image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+            <img src={user.image ?? undefined} alt={user.name ?? ""} className="w-full h-full object-cover" />
           ) : (
             initials
           )}

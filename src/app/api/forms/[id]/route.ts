@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { toJson } from "@/lib/utils";
 
 // ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const companyId = session.user.companyId;
+    const companyId = session.user.companyId ?? undefined;
     if (!companyId) {
       return NextResponse.json({ success: false, error: "Sin empresa asignada" }, { status: 403 });
     }
@@ -104,7 +105,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const companyId = session.user.companyId;
+    const companyId = session.user.companyId ?? undefined;
     if (!companyId) {
       return NextResponse.json({ success: false, error: "Sin empresa asignada" }, { status: 403 });
     }
@@ -168,7 +169,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           action: "UPDATE",
           entity: "FormDefinition",
           entityId: id,
-          changes: formData,
+          changes: toJson(formData),
         },
       });
 
@@ -191,7 +192,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const companyId = session.user.companyId;
+    const companyId = session.user.companyId ?? undefined;
     if (!companyId) {
       return NextResponse.json({ success: false, error: "Sin empresa asignada" }, { status: 403 });
     }
@@ -217,7 +218,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
           action: "DELETE",
           entity: "FormDefinition",
           entityId: id,
-          changes: { name: existing.name, slug: existing.slug },
+          changes: toJson({ name: existing.name, slug: existing.slug }),
         },
       });
     });

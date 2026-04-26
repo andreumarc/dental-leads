@@ -4,6 +4,7 @@ import bcryptjs from "bcryptjs";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
+import { toJson } from "@/lib/utils";
 
 const UserRoleEnum = z.enum([
   "SUPERADMIN",
@@ -34,7 +35,7 @@ export async function GET() {
   if (!hasPermission(session.user.role, "users", "view")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
   if (!hasPermission(session.user.role, "users", "create")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -172,13 +173,7 @@ export async function POST(req: NextRequest) {
         action: "CREATE",
         entity: "User",
         entityId: created.id,
-        changes: {
-          name: data.name,
-          email: data.email,
-          role: data.role,
-          clinicIds: data.clinicIds,
-          isActive: data.isActive,
-        },
+        changes: toJson({ name: data.name, email: data.email, role: data.role, clinicIds: data.clinicIds, isActive: data.isActive }),
       },
     });
 

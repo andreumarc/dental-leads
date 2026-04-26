@@ -32,7 +32,7 @@ export async function GET(
   }
 
   const { id } = await params;
-  const rule = await getRuleOrFail(id, session.user.companyId);
+  const rule = await getRuleOrFail(id, session.user.companyId ?? "");
   if (!rule) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -52,7 +52,7 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const rule = await getRuleOrFail(id, session.user.companyId);
+  const rule = await getRuleOrFail(id, session.user.companyId ?? "");
   if (!rule) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -71,23 +71,23 @@ export async function PATCH(
     where: { id },
     data: {
       ...(data.name !== undefined && { name: data.name }),
-      ...(data.trigger !== undefined && { trigger: data.trigger as never }),
+      ...(data.trigger !== undefined && { trigger: data.trigger as import("@prisma/client").Prisma.InputJsonValue }),
       ...(data.conditions !== undefined && {
-        conditions: data.conditions as never,
+        conditions: data.conditions as import("@prisma/client").Prisma.InputJsonValue,
       }),
-      ...(data.actions !== undefined && { actions: data.actions as never }),
+      ...(data.actions !== undefined && { actions: data.actions as import("@prisma/client").Prisma.InputJsonValue }),
       ...(data.isActive !== undefined && { isActive: data.isActive }),
     },
   });
 
   await prisma.auditLog.create({
     data: {
-      companyId: session.user.companyId,
+      companyId: session.user.companyId!,
       userId: session.user.id,
       action: "UPDATE",
       entity: "AutomationRule",
       entityId: id,
-      changes: { before: rule, after: data } as never,
+      changes: { before: rule, after: data } as import("@prisma/client").Prisma.InputJsonValue,
     },
   });
 
@@ -107,7 +107,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const rule = await getRuleOrFail(id, session.user.companyId);
+  const rule = await getRuleOrFail(id, session.user.companyId ?? "");
   if (!rule) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -115,12 +115,12 @@ export async function DELETE(
   await prisma.automationRule.delete({ where: { id } });
   await prisma.auditLog.create({
     data: {
-      companyId: session.user.companyId,
+      companyId: session.user.companyId!,
       userId: session.user.id,
       action: "DELETE",
       entity: "AutomationRule",
       entityId: id,
-      changes: { before: rule } as never,
+      changes: { before: rule } as import("@prisma/client").Prisma.InputJsonValue,
     },
   });
 

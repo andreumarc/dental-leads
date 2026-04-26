@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
+import { toJson } from "@/lib/utils";
 
 const patchSchema = z.object({
   name: z.string().min(2).max(120).optional(),
@@ -35,7 +36,7 @@ export async function GET(
   if (!hasPermission(session.user.role, "clinics", "view")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -69,7 +70,7 @@ export async function PATCH(
   if (!hasPermission(session.user.role, "clinics", "edit")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -148,14 +149,7 @@ export async function PATCH(
         action: "UPDATE",
         entity: "Clinic",
         entityId: id,
-        changes: {
-          before: {
-            name: existing.name,
-            slug: existing.slug,
-            isActive: existing.isActive,
-          },
-          after: updates,
-        },
+        changes: toJson({ before: { name: existing.name, slug: existing.slug, isActive: existing.isActive }, after: updates }),
       },
     });
 
@@ -179,7 +173,7 @@ export async function DELETE(
   if (!hasPermission(session.user.role, "clinics", "delete")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -204,7 +198,7 @@ export async function DELETE(
         action: "DELETE",
         entity: "Clinic",
         entityId: id,
-        changes: { name: existing.name, slug: existing.slug, softDelete: true },
+        changes: toJson({ name: existing.name, slug: existing.slug, softDelete: true }),
       },
     }),
   ]);

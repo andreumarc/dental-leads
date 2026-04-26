@@ -4,6 +4,7 @@ import bcryptjs from "bcryptjs";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
+import { toJson } from "@/lib/utils";
 
 const UserRoleEnum = z.enum([
   "SUPERADMIN",
@@ -36,7 +37,7 @@ export async function GET(
   if (!hasPermission(session.user.role, "users", "view")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -84,7 +85,7 @@ export async function PATCH(
   if (!hasPermission(session.user.role, "users", "edit")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -213,22 +214,7 @@ export async function PATCH(
         action: "UPDATE",
         entity: "User",
         entityId: id,
-        changes: {
-          before: {
-            name: existing.name,
-            role: existing.role,
-            isActive: existing.isActive,
-            clinicIds: existing.clinicAccess.map((a) => a.clinicId),
-          },
-          after: {
-            name: data.name ?? existing.name,
-            role: data.role ?? existing.role,
-            isActive: data.isActive ?? existing.isActive,
-            clinicIds:
-              data.clinicIds ?? existing.clinicAccess.map((a) => a.clinicId),
-            passwordChanged: Boolean(data.password),
-          },
-        },
+        changes: toJson({ before: { name: existing.name, role: existing.role, isActive: existing.isActive, clinicIds: existing.clinicAccess.map((a) => a.clinicId) }, after: { name: data.name ?? existing.name, role: data.role ?? existing.role, isActive: data.isActive ?? existing.isActive, clinicIds: data.clinicIds ?? existing.clinicAccess.map((a) => a.clinicId), passwordChanged: Boolean(data.password) } }),
       },
     });
 
@@ -252,7 +238,7 @@ export async function DELETE(
   if (!hasPermission(session.user.role, "users", "delete")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -284,7 +270,7 @@ export async function DELETE(
         action: "DELETE",
         entity: "User",
         entityId: id,
-        changes: { email: existing.email, name: existing.name, softDelete: true },
+        changes: toJson({ email: existing.email, name: existing.name, softDelete: true }),
       },
     }),
   ]);

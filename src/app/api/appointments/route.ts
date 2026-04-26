@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import type { AppointmentStatus, Prisma } from "@prisma/client";
+import { toJson } from "@/lib/utils";
 
 const createAppointmentSchema = z.object({
   leadId: z.string().min(1, "El lead es obligatorio"),
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const companyId = session.user.companyId;
+    const companyId = session.user.companyId ?? undefined;
     if (!companyId) {
       return NextResponse.json({ success: false, error: "Sin empresa asignada" }, { status: 403 });
     }
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const companyId = session.user.companyId;
+    const companyId = session.user.companyId ?? undefined;
     if (!companyId) {
       return NextResponse.json({ success: false, error: "Sin empresa asignada" }, { status: 403 });
     }
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest) {
           action: "CREATE",
           entity: "Appointment",
           entityId: appt.id,
-          changes: { leadId, clinicId, treatment, status, proposedAt },
+          changes: toJson({ leadId, clinicId, treatment, status, proposedAt }),
         },
       });
 

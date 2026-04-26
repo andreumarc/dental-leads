@@ -19,7 +19,7 @@ export default async function DashboardLayout({
   const clinics = session.user.companyId
     ? await prisma.clinic.findMany({
         where: {
-          companyId: session.user.companyId,
+          companyId: session.user.companyId!,
           isActive: true,
         },
         select: {
@@ -35,7 +35,7 @@ export default async function DashboardLayout({
   const newLeadsCount = session.user.companyId
     ? await prisma.lead.count({
         where: {
-          companyId: session.user.companyId,
+          companyId: session.user.companyId!,
           status: "NUEVO",
         },
       })

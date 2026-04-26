@@ -22,7 +22,7 @@ export async function GET() {
   }
 
   const rules = await prisma.automationRule.findMany({
-    where: { companyId: session.user.companyId },
+    where: { companyId: session.user.companyId ?? undefined },
     orderBy: { createdAt: "desc" },
   });
   return NextResponse.json({ rules });
@@ -49,23 +49,23 @@ export async function POST(req: NextRequest) {
   const data = parsed.data;
   const rule = await prisma.automationRule.create({
     data: {
-      companyId: session.user.companyId,
+      companyId: session.user.companyId!,
       name: data.name,
-      trigger: data.trigger as never,
-      conditions: data.conditions as never,
-      actions: data.actions as never,
+      trigger: data.trigger as import("@prisma/client").Prisma.InputJsonValue,
+      conditions: data.conditions as import("@prisma/client").Prisma.InputJsonValue,
+      actions: data.actions as import("@prisma/client").Prisma.InputJsonValue,
       isActive: data.isActive,
     },
   });
 
   await prisma.auditLog.create({
     data: {
-      companyId: session.user.companyId,
+      companyId: session.user.companyId!,
       userId: session.user.id,
       action: "CREATE",
       entity: "AutomationRule",
       entityId: rule.id,
-      changes: { after: data } as never,
+      changes: { after: data } as import("@prisma/client").Prisma.InputJsonValue,
     },
   });
 

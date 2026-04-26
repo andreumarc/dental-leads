@@ -12,7 +12,7 @@ export default async function ClinicsPage() {
   if (!hasPermission(session.user.role, "clinics", "view")) {
     redirect("/dashboard");
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) redirect("/dashboard");
 
   const clinics = await prisma.clinic.findMany({

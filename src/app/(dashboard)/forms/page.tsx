@@ -7,7 +7,7 @@ export default async function FormsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) redirect("/login");
 
   const forms = await prisma.formDefinition.findMany({

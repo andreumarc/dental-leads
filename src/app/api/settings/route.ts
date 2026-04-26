@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
+import { toJson } from "@/lib/utils";
 
 const updateSchema = z.object({
   timezone: z.string().min(1).max(100).optional(),
@@ -24,7 +25,7 @@ export async function GET() {
   if (!hasPermission(session.user.role, "settings", "view")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
   if (!hasPermission(session.user.role, "settings", "editCompany")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
     duplicateDetection:
       data.duplicateDetection ?? existing?.duplicateDetection ?? true,
     gdprRequired: data.gdprRequired ?? existing?.gdprRequired ?? true,
-    notifications: mergedNotifications,
+    notifications: toJson(mergedNotifications),
   };
 
   const result = await prisma.$transaction(async (tx) => {
@@ -116,18 +117,7 @@ export async function POST(req: NextRequest) {
         action: "UPDATE",
         entity: "CompanySettings",
         entityId: settings.id,
-        changes: {
-          before: existing
-            ? {
-                timezone: existing.timezone,
-                language: existing.language,
-                responseTimeAlert: existing.responseTimeAlert,
-                gdprRequired: existing.gdprRequired,
-                duplicateDetection: existing.duplicateDetection,
-              }
-            : null,
-          after: data,
-        },
+        changes: toJson({ before: existing ? { timezone: existing.timezone, language: existing.language, responseTimeAlert: existing.responseTimeAlert, gdprRequired: existing.gdprRequired, duplicateDetection: existing.duplicateDetection } : null, after: data }),
       },
     });
 

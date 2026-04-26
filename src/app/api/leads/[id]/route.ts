@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import type { LeadStatus, LeadPriority } from "@prisma/client";
+import { toJson } from "@/lib/utils";
 
 // ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 
@@ -44,7 +45,7 @@ export async function GET(
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const companyId = session.user.companyId;
+    const companyId = session.user.companyId ?? undefined;
     if (!companyId) {
       return NextResponse.json({ success: false, error: "Sin empresa asignada" }, { status: 403 });
     }
@@ -125,7 +126,7 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const companyId = session.user.companyId;
+    const companyId = session.user.companyId ?? undefined;
     if (!companyId) {
       return NextResponse.json({ success: false, error: "Sin empresa asignada" }, { status: 403 });
     }
@@ -201,7 +202,7 @@ export async function PATCH(
           action: statusChanged ? "STATUS_CHANGE" : "UPDATE",
           entity: "Lead",
           entityId: id,
-          changes: data,
+          changes: toJson(data),
         },
       });
 
@@ -227,7 +228,7 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const companyId = session.user.companyId;
+    const companyId = session.user.companyId ?? undefined;
     if (!companyId) {
       return NextResponse.json({ success: false, error: "Sin empresa asignada" }, { status: 403 });
     }
@@ -250,7 +251,7 @@ export async function DELETE(
           action: "DELETE",
           entity: "Lead",
           entityId: id,
-          changes: { firstName: existing.firstName, lastName: existing.lastName, phone: existing.phone },
+          changes: toJson({ firstName: existing.firstName, lastName: existing.lastName, phone: existing.phone }),
         },
       });
     });

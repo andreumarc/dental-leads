@@ -13,7 +13,7 @@ export default async function UsersPage() {
     redirect("/dashboard");
   }
 
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) redirect("/dashboard");
 
   const [users, clinics] = await Promise.all([

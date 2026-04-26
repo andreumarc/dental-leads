@@ -157,7 +157,7 @@ export function FormBuilderModal({ form, clinics, onClose, onSaved }: FormBuilde
   function updateField(index: number, key: keyof FormField, value: string | boolean | string[]) {
     setFields((prev) => {
       const next = [...prev];
-      (next[index] as Record<string, unknown>)[key] = value;
+      (next[index] as unknown as Record<string, unknown>)[key] = value;
       if (key === "label" && typeof value === "string") {
         next[index].name = slugify(value).replace(/-/g, "_");
       }

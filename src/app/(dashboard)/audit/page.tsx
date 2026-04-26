@@ -28,7 +28,7 @@ export default async function AuditPage({
   if (!hasPermission(session.user.role, "audit", "view")) {
     redirect("/dashboard");
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId && session.user.role !== "SUPERADMIN") {
     redirect("/dashboard");
   }

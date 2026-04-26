@@ -141,7 +141,7 @@ async function executeAction(
             action: "UPDATE",
             entity: "Lead",
             entityId: lead.id,
-            changes: { alert: action.params } as never,
+            changes: { alert: action.params } as import("@prisma/client").Prisma.InputJsonValue,
           },
         });
         break;

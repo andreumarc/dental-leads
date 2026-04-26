@@ -23,7 +23,7 @@ export default async function AppointmentsPage({ searchParams }: AppointmentsPag
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) redirect("/login");
 
   const sp = await searchParams;

@@ -186,26 +186,13 @@ export function ChannelBadge({
 // ─── Role Badge ───────────────────────────────────────────────────────────────
 
 const roleConfig: Record<UserRole, { label: string; className: string }> = {
-  SUPERADMIN: {
-    label: "Super Admin",
-    className: "bg-purple-100 text-purple-800",
-  },
-  ADMIN: {
-    label: "Administrador",
-    className: "bg-blue-100 text-blue-800",
-  },
-  DEMO: { label: "Demo", className: "bg-gray-100 text-gray-600" },
-  DIRECCION: {
-    label: "Dirección",
-    className: "bg-indigo-100 text-indigo-800",
-  },
-  RECEPCION: { label: "Recepción", className: "bg-green-100 text-green-800" },
-  CALLCENTER: {
-    label: "Call Center",
-    className: "bg-cyan-100 text-cyan-800",
-  },
-  
-  
+  SUPERADMIN: { label: "Super Admin",   className: "bg-purple-100 text-purple-800" },
+  ADMIN:      { label: "Administrador", className: "bg-blue-100 text-blue-800" },
+  DIRECCION:  { label: "Dirección",     className: "bg-indigo-100 text-indigo-800" },
+  RRHH:       { label: "RRHH",          className: "bg-rose-100 text-rose-800" },
+  GESTOR:     { label: "Gestor",        className: "bg-cyan-100 text-cyan-800" },
+  EMPLEADO:   { label: "Empleado",      className: "bg-green-100 text-green-800" },
+  DEMO:       { label: "Demo",          className: "bg-gray-100 text-gray-600" },
 };
 
 export function RoleBadge({

@@ -299,7 +299,7 @@ export function LeadsInboxClient({
       cell: ({ row }) => {
         const a = row.original.assignedTo;
         if (!a) return <span className="text-xs text-neutral-400 italic">Sin asignar</span>;
-        const name = a.name ?? `${a.firstName ?? ""} ${a.lastName ?? ""}`.trim() || a.email;
+        const name = (a.name ?? `${(a.firstName ?? "")} ${(a.lastName ?? "")}`.trim()) || a.email;
         return (
           <div className="flex items-center gap-1.5">
             <UserAvatar name={name} avatar={a.avatar} size="xs" />

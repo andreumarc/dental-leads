@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
       treatment?: string | null;
       status: "NUEVO";
       priority: "MEDIA";
-      source: string;
+      channel: string;
     }> = [];
 
     for (let i = 0; i < rows.length; i++) {
@@ -231,7 +231,7 @@ export async function POST(req: NextRequest) {
         treatment: mapped.treatment ?? null,
         status: "NUEVO",
         priority: "MEDIA",
-        source: "csv_import",
+        channel: "csv_import",
       });
     }
 

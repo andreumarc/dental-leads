@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 interface DashboardShellProps {
   user: {
     id: string;
-    name: string;
+    name: string | null;
     email: string;
-    image: string | null;
+    image?: string | null;
     role: UserRole;
     companyId: string | null;
   };

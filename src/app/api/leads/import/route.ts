@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
 import type { LeadPriority } from "@prisma/client";
+import { toJson } from "@/lib/utils";
 
 const rowSchema = z.object({
   firstName: z.string().min(1),
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
   if (!hasPermission(session.user.role, "leads", "import")) {
     return NextResponse.json({ success: false, error: "Sin permisos" }, { status: 403 });
   }
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   if (!companyId) {
     return NextResponse.json({ success: false, error: "Sin empresa" }, { status: 403 });
   }
@@ -129,12 +130,7 @@ export async function POST(req: NextRequest) {
       action: "IMPORT",
       entity: "Lead",
       entityId: clinicId,
-      changes: {
-        total: rows.length,
-        created,
-        errors: errors.length,
-        clinicId,
-      },
+      changes: toJson({ total: rows.length, created, errors: errors.length, clinicId }),
     },
   });
 

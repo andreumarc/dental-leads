@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
 // Routes that don't require authentication
 const PUBLIC_ROUTES = [
@@ -32,8 +31,7 @@ const PROTECTED_APP_ROUTES = [
   "/audit",
 ];
 
-export default auth(
-  (req: NextRequest & { auth: Awaited<ReturnType<typeof auth>> }) => {
+export default auth((req) => {
     const { pathname } = req.nextUrl;
 
     // Allow public API routes

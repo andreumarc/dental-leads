@@ -28,9 +28,9 @@ interface MobileSidebarProps {
   onClose: () => void;
   user: {
     id: string;
-    name: string;
+    name: string | null;
     email: string;
-    image: string | null;
+    image?: string | null;
     role: UserRole;
     companyId: string | null;
   };
@@ -129,7 +129,7 @@ export function MobileSidebar({
             <div className="w-9 h-9 rounded-full bg-[#0D9488] flex items-center justify-center flex-shrink-0 text-white text-sm font-bold overflow-hidden">
               {user.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+                <img src={user.image ?? undefined} alt={user.name ?? ""} className="w-full h-full object-cover" />
               ) : (
                 initials
               )}

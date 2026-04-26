@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const companyId = session.user.companyId;
+  const companyId = session.user.companyId ?? undefined;
   const now = new Date();
 
   // Time ranges

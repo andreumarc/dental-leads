@@ -496,7 +496,7 @@ export function LeadDetailClient({ lead, users, currentUserId }: LeadDetailClien
                   )}
                   <DropdownMenu.Separator className="my-1 h-px bg-neutral-100" />
                   {users.map((u) => {
-                    const name = u.name ?? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email;
+                    const name = (u.name ?? `${(u.firstName ?? "")} ${(u.lastName ?? "")}`.trim()) || u.email;
                     const isCurrent = u.id === lead.assignedToId;
                     return (
                       <DropdownMenu.Item
@@ -755,7 +755,7 @@ export function LeadDetailClient({ lead, users, currentUserId }: LeadDetailClien
                   </DropdownMenu.Item>
                   <DropdownMenu.Separator className="my-1 h-px bg-neutral-100" />
                   {users.map((u) => {
-                    const name = u.name ?? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email;
+                    const name = (u.name ?? `${(u.firstName ?? "")} ${(u.lastName ?? "")}`.trim()) || u.email;
                     return (
                       <DropdownMenu.Item
                         key={u.id}

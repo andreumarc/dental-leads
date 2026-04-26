@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { toJson } from "@/lib/utils";
 
 // ─── GET /api/public/forms/[slug] ────────────────────────────────────────────
 // Returns the public form definition (fields only, no sensitive data)
@@ -146,7 +147,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
       const submission = await tx.formSubmission.create({
         data: {
           formId: form.id,
-          data: data as Record<string, unknown>,
+          data: toJson(data),
           ipAddress: ipAddress ?? null,
           userAgent: userAgent ?? null,
         },
@@ -167,7 +168,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
           gdprConsent: Boolean(data.gdpr || data.rgpd || data.consent || data.consentimiento),
           gdprConsentDate: Boolean(data.gdpr || data.rgpd || data.consent || data.consentimiento) ? new Date() : null,
           initialMessage: (data.mensaje as string) ?? (data.message as string) ?? null,
-          source: "formulario",
+          channel: "formulario",
           utmSource: (data.utm_source as string) ?? null,
           utmMedium: (data.utm_medium as string) ?? null,
           utmCampaign: (data.utm_campaign as string) ?? null,

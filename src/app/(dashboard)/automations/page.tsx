@@ -15,11 +15,11 @@ export default async function AutomationsPage() {
 
   const [rules, users] = await Promise.all([
     prisma.automationRule.findMany({
-      where: { companyId: session.user.companyId },
+      where: { companyId: session.user.companyId ?? undefined },
       orderBy: { createdAt: "desc" },
     }),
     prisma.user.findMany({
-      where: { companyId: session.user.companyId, isActive: true },
+      where: { companyId: session.user.companyId!, isActive: true },
       select: { id: true, name: true, email: true, role: true },
     }),
   ]);

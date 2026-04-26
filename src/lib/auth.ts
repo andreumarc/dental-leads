@@ -163,30 +163,4 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
   trustHost: true,
 });
 
-// Type augmentation for session
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      image: string | null;
-      role: UserRole;
-      companyId: string | null;
-    };
-  }
-
-  interface User {
-    role: UserRole;
-    companyId: string | null;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: UserRole;
-    companyId: string | null;
-    freshData?: boolean;
-  }
-}
+// Type augmentation is in src/types/next-auth.d.ts

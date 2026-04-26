@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import type { LeadStatus, LeadPriority, Prisma } from "@prisma/client";
+import { toJson } from "@/lib/utils";
 
 // ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const companyId = session.user.companyId;
+    const companyId = session.user.companyId ?? undefined;
     if (!companyId) {
       return NextResponse.json({ success: false, error: "Sin empresa asignada" }, { status: 403 });
     }
@@ -131,7 +132,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
     }
 
-    const companyId = session.user.companyId;
+    const companyId = session.user.companyId ?? undefined;
     if (!companyId) {
       return NextResponse.json({ success: false, error: "Sin empresa asignada" }, { status: 403 });
     }
@@ -194,7 +195,7 @@ export async function POST(req: NextRequest) {
           action: "CREATE",
           entity: "Lead",
           entityId: newLead.id,
-          changes: { firstName, lastName, phone, email, clinicId, priority, status: "NUEVO" },
+          changes: toJson({ firstName, lastName, phone, email, clinicId, priority, status: "NUEVO" }),
         },
       });
 

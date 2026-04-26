@@ -34,6 +34,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { mapHubRole } from "@/lib/rbac";
 import bcryptjs from "bcryptjs";
+import { toJson } from "@/lib/utils";
 
 const syncUserSchema = z.object({
   email: z.string().email(),
@@ -204,13 +205,7 @@ export async function POST(req: NextRequest) {
         action: existingUser ? "UPDATE" : "CREATE",
         entity: "User",
         entityId: user.id,
-        changes: {
-          source: "hub_sync",
-          email,
-          role: localRole,
-          active,
-          clinic_ids: clinic_ids ?? "unchanged",
-        } as never,
+        changes: toJson({ source: "hub_sync", email, role: localRole, active, clinic_ids: clinic_ids ?? "unchanged" }),
         ipAddress:
           req.headers.get("x-forwarded-for") ??
           req.headers.get("x-real-ip") ??

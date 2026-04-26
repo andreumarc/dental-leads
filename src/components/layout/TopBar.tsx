@@ -23,9 +23,9 @@ interface TopBarProps {
   onMenuToggle: () => void;
   user: {
     id: string;
-    name: string;
+    name: string | null;
     email: string;
-    image: string | null;
+    image?: string | null;
     role: UserRole;
     companyId: string | null;
   };
@@ -198,14 +198,14 @@ export function TopBar({ onMenuToggle, user, clinics = [], currentClinicId }: To
               <div className="w-6 h-6 rounded-full bg-[#0D9488] flex items-center justify-center text-white text-xs font-bold overflow-hidden flex-shrink-0">
                 {user.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+                  <img src={user.image ?? undefined} alt={user.name ?? ""} className="w-full h-full object-cover" />
                 ) : (
                   initials
                 )}
               </div>
               <div className="hidden sm:block text-left min-w-0">
                 <p className="text-xs font-medium text-neutral-900 truncate max-w-[100px]">
-                  {user.name.split(" ")[0]}
+                  {(user.name ?? user.email).split(" ")[0]}
                 </p>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" />

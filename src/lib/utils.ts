@@ -3,6 +3,12 @@ import { twMerge } from "tailwind-merge";
 import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns";
 import { es } from "date-fns/locale";
 import type { LeadStatus, LeadPriority } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+
+/** Cast any value to Prisma's InputJsonValue for Json fields */
+export function toJson(v: unknown): Prisma.InputJsonValue {
+  return v as Prisma.InputJsonValue;
+}
 
 // Tailwind class merger
 export function cn(...inputs: ClassValue[]) {
