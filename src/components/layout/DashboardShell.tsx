@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import type { UserRole } from "@prisma/client";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar } from "./TopBar";
@@ -28,6 +29,13 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close the mobile drawer on any route change — covers sidebar nav links
+  // and any programmatic navigation. Escape closes natively via Radix Dialog.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-neutral-50">
