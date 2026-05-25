@@ -18,6 +18,7 @@ import type { UserRole } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/rbac";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 interface TopBarProps {
   onMenuToggle: () => void;
@@ -173,6 +174,9 @@ export function TopBar({ onMenuToggle, user, clinics = [], currentClinicId }: To
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
         )}
+
+        {/* Theme switcher */}
+        <ThemeSwitcher />
 
         {/* Notifications */}
         <button
